@@ -31,10 +31,29 @@ class ChatState {
 }
 
 class ChatNotifier extends StateNotifier<ChatState> {
-  ChatNotifier() : super(ChatState());
+  ChatNotifier() : super(ChatState()) {
+    _startConversation();
+  }
+
+  Future<void> _startConversation() async {
+    state = state.copyWith(isLoading: true);
+    try {
+      final response = await ChatService.sendMessage(
+        message: '__START__',
+        isStart: true,
+      );
+      final aiMessage = MessageModel.fromJson(response['message']);
+      state = state.copyWith(
+        messages: [aiMessage],
+        isLoading: false,
+        conversationId: response['conversationId'],
+      );
+    } catch (e) {
+      state = state.copyWith(isLoading: false);
+    }
+  }
 
   Future<void> sendMessage(String message) async {
-    // User message add karo
     final userMessage = MessageModel(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       role: 'user',
@@ -63,13 +82,14 @@ class ChatNotifier extends StateNotifier<ChatState> {
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: 'Something went wrong. Please try again.',
+        error: 'something went wrong try again',
       );
     }
   }
 
   void clearChat() {
     state = ChatState();
+    _startConversation();
   }
 }
 
