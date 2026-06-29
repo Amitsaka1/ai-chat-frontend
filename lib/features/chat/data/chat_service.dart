@@ -9,6 +9,7 @@ class ChatService {
     String? conversationId,
     String provider = ApiConstants.defaultProvider,
     String model = ApiConstants.defaultModel,
+    bool isStart = false,
   }) async {
     final response = await http.post(
       Uri.parse('${ApiConstants.baseUrl}${ApiConstants.chatEndpoint}'),
@@ -18,13 +19,17 @@ class ChatService {
         if (conversationId != null) 'conversationId': conversationId,
         'provider': provider,
         'model': model,
+        'isStart': isStart,
       }),
+    ).timeout(
+      const Duration(seconds: 60),
+      onTimeout: () => throw Exception('timeout'),
     );
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Failed to send message: ${response.statusCode}');
+      throw Exception('Failed ${response.statusCode}');
     }
   }
 }
