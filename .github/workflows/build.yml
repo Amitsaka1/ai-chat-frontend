@@ -21,11 +21,10 @@ jobs:
       - name: Create Flutter project
         run: flutter create . --project-name ai_chat_app --org com.aichat
 
-      - name: Restore our files
+      - name: Add internet permission
         run: |
-          cp -f pubspec.yaml pubspec.yaml.bak
-          flutter create . --project-name ai_chat_app --org com.aichat
-          cp -f pubspec.yaml.bak pubspec.yaml
+          sed -i 's/<manifest/<manifest/g' android/app/src/main/AndroidManifest.xml
+          sed -i 's/<application/<uses-permission android:name="android.permission.INTERNET"\/>\n    <application/g' android/app/src/main/AndroidManifest.xml
 
       - name: Install dependencies
         run: flutter pub get
