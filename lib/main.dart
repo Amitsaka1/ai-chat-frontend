@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme/app_theme.dart';
-import 'features/chat/screens/chat_screen.dart';
+import 'features/cards/screens/cards_home_screen.dart';
 
 void main() {
   runApp(
@@ -17,10 +17,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'AI Chat',
+      title: 'Story AI',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
-      home: const ChatScreen(),
+      home: const CardsHomeScreen(),
     );
   }
 }
