@@ -3,9 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/chat_provider.dart';
 import '../models/message_model.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../cards/models/story_card_model.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
-  const ChatScreen({super.key});
+  final StoryCardModel storyCard;
+
+  const ChatScreen({super.key, required this.storyCard});
 
   @override
   ConsumerState<ChatScreen> createState() => _ChatScreenState();
@@ -31,7 +34,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
     _controller.clear();
-    ref.read(chatProvider.notifier).sendMessage(text);
+    ref.read(chatProvider(widget.storyCard).notifier).sendMessage(text);
     _scrollToBottom();
   }
 
@@ -44,25 +47,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final chatState = ref.watch(chatProvider);
+    final chatState = ref.watch(chatProvider(widget.storyCard));
 
-    ref.listen(chatProvider, (_, __) => _scrollToBottom());
+    ref.listen(chatProvider(widget.storyCard), (_, __) => _scrollToBottom());
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AI Chat'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh, color: AppTheme.onSurfaceVariant),
-            onPressed: () => ref.read(chatProvider.notifier).clearChat(),
-          ),
-        ],
+        title: Text('${widget.storyCard.emoji} ${widget.storyCard.title}'),
       ),
       body: Column(
         children: [
           Expanded(
             child: chatState.messages.isEmpty
-                ? _buildEmptyState()
+                ? const Center(child: CircularProgressIndicator())
                 : ListView.builder(
                     controller: _scrollController,
                     padding: const EdgeInsets.all(16),
@@ -90,35 +87,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.chat_bubble_outline,
-              size: 64, color: AppTheme.onSurfaceVariant),
-          SizedBox(height: 16),
-          Text(
-            'Start a conversation',
-            style: TextStyle(
-              color: AppTheme.onSurfaceVariant,
-              fontSize: 18,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'Ask me anything!',
-            style: TextStyle(
-              color: AppTheme.onSurfaceVariant,
-              fontSize: 14,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildMessageBubble(MessageModel message) {
     final isUser = message.isUser;
     return Padding(
@@ -132,8 +100,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             CircleAvatar(
               radius: 16,
               backgroundColor: AppTheme.primary,
-              child: const Text('AI',
-                  style: TextStyle(fontSize: 10, color: Colors.white)),
+              child: Text(widget.storyCard.emoji,
+                  style: const TextStyle(fontSize: 14)),
             ),
             const SizedBox(width: 8),
           ],
@@ -150,28 +118,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   bottomRight: Radius.circular(isUser ? 4 : 20),
                 ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    message.content,
-                    style: const TextStyle(
-                      color: AppTheme.onSurface,
-                      fontSize: 15,
-                      height: 1.4,
-                    ),
-                  ),
-                  if (!isUser && message.tokensUsed > 0) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      '${message.tokensUsed} tokens',
-                      style: const TextStyle(
-                        color: AppTheme.onSurfaceVariant,
-                        fontSize: 10,
-                      ),
-                    ),
-                  ],
-                ],
+              child: Text(
+                message.content,
+                style: const TextStyle(
+                  color: AppTheme.onSurface,
+                  fontSize: 15,
+                  height: 1.4,
+                ),
               ),
             ),
           ),
@@ -189,8 +142,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           CircleAvatar(
             radius: 16,
             backgroundColor: AppTheme.primary,
-            child: const Text('AI',
-                style: TextStyle(fontSize: 10, color: Colors.white)),
+            child: Text(widget.storyCard.emoji,
+                style: const TextStyle(fontSize: 14)),
           ),
           const SizedBox(width: 8),
           Container(
@@ -199,16 +152,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               color: AppTheme.aiBubble,
               borderRadius: BorderRadius.circular(20),
             ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _DotAnimation(delay: 0),
-                SizedBox(width: 4),
-                _DotAnimation(delay: 200),
-                SizedBox(width: 4),
-                _DotAnimation(delay: 400),
-              ],
-            ),
+            child: const Text('...',
+                style: TextStyle(color: AppTheme.onSurfaceVariant)),
           ),
         ],
       ),
@@ -229,7 +174,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               textInputAction: TextInputAction.send,
               onSubmitted: (_) => _sendMessage(),
               decoration: const InputDecoration(
-                hintText: 'Message AI...',
+                hintText: 'Message...',
                 hintStyle: TextStyle(color: AppTheme.onSurfaceVariant),
               ),
             ),
@@ -248,50 +193,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _DotAnimation extends StatefulWidget {
-  final int delay;
-  const _DotAnimation({required this.delay});
-
-  @override
-  State<_DotAnimation> createState() => _DotAnimationState();
-}
-
-class _DotAnimationState extends State<_DotAnimation>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-    _animation = Tween<double>(begin: 0, end: 1).animate(_controller);
-    Future.delayed(Duration(milliseconds: widget.delay), () {
-      if (mounted) _controller.repeat(reverse: true);
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _animation,
-      child: const CircleAvatar(
-        radius: 4,
-        backgroundColor: AppTheme.onSurfaceVariant,
       ),
     );
   }
