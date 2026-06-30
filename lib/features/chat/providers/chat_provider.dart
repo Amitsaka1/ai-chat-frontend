@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/message_model.dart';
 import '../data/chat_service.dart';
+import '../../cards/models/story_card_model.dart';
 
 class ChatState {
   final List<MessageModel> messages;
@@ -31,7 +32,9 @@ class ChatState {
 }
 
 class ChatNotifier extends StateNotifier<ChatState> {
-  ChatNotifier() : super(ChatState()) {
+  final StoryCardModel storyCard;
+
+  ChatNotifier(this.storyCard) : super(ChatState()) {
     _startConversation();
   }
 
@@ -41,6 +44,8 @@ class ChatNotifier extends StateNotifier<ChatState> {
       final response = await ChatService.sendMessage(
         message: '__START__',
         isStart: true,
+        cardId: storyCard.id,
+        systemPrompt: storyCard.systemPrompt,
       );
       final aiMessage = MessageModel.fromJson(response['message']);
       state = state.copyWith(
@@ -49,7 +54,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
         conversationId: response['conversationId'],
       );
     } catch (e) {
-      state = state.copyWith(isLoading: false);
+      state = state.copyWith(isLoading: false, error: 'something went wrong');
     }
   }
 
@@ -70,6 +75,8 @@ class ChatNotifier extends StateNotifier<ChatState> {
       final response = await ChatService.sendMessage(
         message: message,
         conversationId: state.conversationId,
+        cardId: storyCard.id,
+        systemPrompt: storyCard.systemPrompt,
       );
 
       final aiMessage = MessageModel.fromJson(response['message']);
@@ -86,13 +93,9 @@ class ChatNotifier extends StateNotifier<ChatState> {
       );
     }
   }
-
-  void clearChat() {
-    state = ChatState();
-    _startConversation();
-  }
 }
 
-final chatProvider = StateNotifierProvider<ChatNotifier, ChatState>((ref) {
-  return ChatNotifier();
-});
+final chatProvider =
+    StateNotifierProvider.family<ChatNotifier, ChatState, StoryCardModel>(
+  (ref, storyCard) => ChatNotifier(storyCard),
+);
