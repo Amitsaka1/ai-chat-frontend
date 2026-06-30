@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../../core/constants/api.dart';
-import '../models/message_model.dart';
 
 class ChatService {
   static Future<Map<String, dynamic>> sendMessage({
@@ -10,6 +9,8 @@ class ChatService {
     String provider = ApiConstants.defaultProvider,
     String model = ApiConstants.defaultModel,
     bool isStart = false,
+    required String cardId,
+    required String systemPrompt,
   }) async {
     final response = await http.post(
       Uri.parse('${ApiConstants.baseUrl}${ApiConstants.chatEndpoint}'),
@@ -20,6 +21,8 @@ class ChatService {
         'provider': provider,
         'model': model,
         'isStart': isStart,
+        'cardId': cardId,
+        'systemPrompt': systemPrompt,
       }),
     ).timeout(
       const Duration(seconds: 60),
