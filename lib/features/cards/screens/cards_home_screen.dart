@@ -118,42 +118,12 @@ class _CardsHomeScreenState extends State<CardsHomeScreen> {
                       mainAxisSpacing: 10,
                       childAspectRatio: 0.72,
                     ),
-                    itemCount: _pagedCards.length,
+                    itemCount: _filteredCards.length,
                     itemBuilder: (context, index) {
-                      return _buildCard(_pagedCards[index]);
+                      return _buildCard(_filteredCards[index]);
                     },
                   ),
           ),
-
-          // Pagination
-          if (_totalPages > 1)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.chevron_left,
-                        color: AppTheme.onSurfaceVariant),
-                    onPressed: _currentPage > 0
-                        ? () => setState(() => _currentPage--)
-                        : null,
-                  ),
-                  Text(
-                    '${_currentPage + 1} / $_totalPages',
-                    style: const TextStyle(
-                        color: AppTheme.onSurfaceVariant, fontSize: 13),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.chevron_right,
-                        color: AppTheme.onSurfaceVariant),
-                    onPressed: _currentPage < _totalPages - 1
-                        ? () => setState(() => _currentPage++)
-                        : null,
-                  ),
-                ],
-              ),
-            ),
         ],
       ),
     );
