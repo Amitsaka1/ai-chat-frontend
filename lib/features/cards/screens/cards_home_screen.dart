@@ -97,20 +97,20 @@ class _CardsHomeScreenState extends State<CardsHomeScreen> {
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
 
-          // Cards grid
+          // Cards grid — sirf upar niche scroll
           Expanded(
             child: _pagedCards.isEmpty
                 ? const Center(
                     child: Text(
                       'No cards found',
-                      style:
-                          TextStyle(color: AppTheme.onSurfaceVariant),
+                      style: TextStyle(color: AppTheme.onSurfaceVariant),
                     ),
                   )
                 : GridView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
+                    physics: const ClampingScrollPhysics(), // left-right swipe band
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 3,
@@ -184,15 +184,30 @@ class _CardsHomeScreenState extends State<CardsHomeScreen> {
           ),
         ),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(card.emoji,
-                style: const TextStyle(fontSize: 36)),
-            const SizedBox(height: 8),
-            // Auto scroll title
-            SizedBox(
-              height: 36,
+            // Title upar box mein — auto scroll
+            Container(
+              width: double.infinity,
+              height: 32,
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withValues(alpha: 0.3),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
+                ),
+              ),
+              alignment: Alignment.center,
               child: _ScrollingText(text: card.title),
+            ),
+
+            // Emoji center mein
+            Expanded(
+              child: Center(
+                child: Text(
+                  card.emoji,
+                  style: const TextStyle(fontSize: 38),
+                ),
+              ),
             ),
           ],
         ),
@@ -209,27 +224,18 @@ class _ScrollingText extends StatefulWidget {
   State<_ScrollingText> createState() => _ScrollingTextState();
 }
 
-class _ScrollingTextState extends State<_ScrollingText>
-    with SingleTickerProviderStateMixin {
+class _ScrollingTextState extends State<_ScrollingText> {
   late final ScrollController _scrollController;
-  late final AnimationController _animController;
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
-    _animController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 4),
-    );
-
     WidgetsBinding.instance.addPostFrameCallback((_) => _startScroll());
   }
 
   Future<void> _startScroll() async {
     await Future.delayed(const Duration(seconds: 1));
-    if (!mounted) return;
-
     while (mounted) {
       if (_scrollController.hasClients &&
           _scrollController.position.maxScrollExtent > 0) {
@@ -238,7 +244,7 @@ class _ScrollingTextState extends State<_ScrollingText>
           duration: const Duration(seconds: 3),
           curve: Curves.linear,
         );
-        await Future.delayed(const Duration(milliseconds: 500));
+        await Future.delayed(const Duration(milliseconds: 400));
         if (!mounted) return;
         await _scrollController.animateTo(
           0,
@@ -255,7 +261,6 @@ class _ScrollingTextState extends State<_ScrollingText>
   @override
   void dispose() {
     _scrollController.dispose();
-    _animController.dispose();
     super.dispose();
   }
 
@@ -270,12 +275,10 @@ class _ScrollingTextState extends State<_ScrollingText>
         child: Text(
           widget.text,
           style: const TextStyle(
-            color: AppTheme.onSurface,
-            fontSize: 11,
+            color: Colors.white,
+            fontSize: 10,
             fontWeight: FontWeight.w600,
           ),
-          maxLines: 2,
-          textAlign: TextAlign.center,
         ),
       ),
     );
